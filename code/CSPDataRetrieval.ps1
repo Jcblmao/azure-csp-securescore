@@ -1,7 +1,7 @@
 <#
 .DESCRIPTION
 Data retrieval script for the Mission 65 project. This script will retrieve all data necessary for the secure score dashboard.
-More information on the process can be found in the readme of this repository at [https://github.com/dexmach-csp/azure-csp-securescore].
+More information on the process can be found in the readme of this repository at [https://github.com/jcblmao/azure-csp-securescore].
 Powershell 7 is required for this script.
 #>
 [cmdletbinding()]
@@ -40,11 +40,11 @@ function Start-CSPSecureScorePrerequisitesProcess {
     $RequiredModules = @(
         @{
             ModuleName      = 'Microsoft.Graph.Authentication'
-            RequiredVersion = '1.15.0'
+            RequiredVersion = '2.8.0'
         },
         @{
             ModuleName      = 'Microsoft.Graph.Applications'
-            RequiredVersion = '1.15.0'
+            RequiredVersion = '2.8.0'
         }
     )
     Install-RequiredModules -RequiredModulesList $RequiredModules
@@ -52,7 +52,7 @@ function Start-CSPSecureScorePrerequisitesProcess {
 
     #region Azure graph connection
     Write-Host "`n>> Azure graph connection <<" -ForegroundColor Cyan
-    $CSPApplicationDisplayName = 'DexMach CSP Secure Score dashboard'
+    $CSPApplicationDisplayName = 'CSP Secure Score dashboard'
     do {
         $TenantId = (Read-Host -Prompt "Provide the tenant id of your Azure tenant in which you want to create the multi-tenant application").TrimEnd().TrimStart()
         if (-not $TenantId) {
@@ -109,7 +109,7 @@ function Start-CSPSecureScorePrerequisitesProcess {
     Write-Output "Created application details are:`n    > Application id: $($CSPApplication.Id)`n    > DisplayName: $($CSPApplication.DisplayName)"
     #endregion
 
-    Write-Output "`nIn order to use your new application in the data retrieval flow please create an application secret in the Azure portal. For more information on how to do this see [https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret] or our documentation at [https://github.com/dexmach/azure-csp-securescore]."
+    Write-Output "`nIn order to use your new application in the data retrieval flow please create an application secret in the Azure portal. For more information on how to do this see [https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret] or our documentation at [https://github.com/jcblmao/azure-csp-securescore]."
     Write-Host "`n>> The prerequisites flow has finished <<" -ForegroundColor Green
 }
 
@@ -208,8 +208,8 @@ function Start-CSPSecureScoreDataProcess {
     Write-Host "`n>> Getting all Azure Customers <<" -ForegroundColor Cyan
     Write-Output "[Azure Customers] Getting all the Azure Customers from the Partner Customers.."
 
-    $CustomerSubscriptionList = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
-    $DataRetrievalPrerequisitesIssueList = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+    $CustomerSubscriptionList = [System.Collections.Concurrent.ConcurrentDictionary[string,object]]::new()
+    $DataRetrievalPrerequisitesIssueList = [System.Collections.Concurrent.ConcurrentDictionary[string,object]]::new()
     $CustomerList | ForEach-Object -ThrottleLimit 50 -Parallel {
         $CustomerObject = @{
             CustomerId = $_.CustomerId
@@ -261,7 +261,7 @@ function Start-CSPSecureScoreDataProcess {
                     }
                 )
                 ApplicationId     = $using:CSP_Partner_SpnId
-                DisplayName       = 'DexMach CSP Secure Score dashboard'
+                DisplayName       = 'CSP Secure Score dashboard'
             }
             $Uri = "https://api.partnercenter.microsoft.com/v1/customers/$($_.CustomerId)/applicationconsents"
             $null = Invoke-RestMethod -Method 'Post' -Uri $Uri -Body ($Body | ConvertTo-Json) -Authentication 'Bearer' -Token (ConvertTo-SecureString -AsPlainText -Force -String $using:CSPToken.access_token) -ContentType 'application/json' -ErrorAction 'Stop'
@@ -430,7 +430,7 @@ function Start-CSPSecureScoreDataProcess {
         try {
             $null = New-Item -Path "./data" -ItemType Directory -Force
             $null = New-Item -Path "./data/$OutputFolderName" -ItemType Directory -Force
-            if ($InputObjectList.Count -gt 0) {
+            if ($InputObjectList.Count -ne 0) {
                 ConvertTo-Json -InputObject $InputObjectList -Depth 100 | Out-File "data/$OutputFolderName/$OutputFileName" -Force
             }
             else {
@@ -458,7 +458,7 @@ function Start-CSPSecureScoreDataProcess {
 
     Write-Host "`n>> The CSP data retrieval process has finished <<" -ForegroundColor Green
     Write-Output "Find your files in the 'data' folder under the directory from which you executed this script."
-    Write-Output "For feedback or questions go to [https://github.com/dexmach-csp/azure-csp-securescore/issues]."
+    Write-Output "For feedback or questions go to [https://github.com/jcblmao-csp/azure-csp-securescore/issues]."
 }
 
 function Start-CSPSecureScoreDataUpload {
@@ -643,7 +643,7 @@ function Start-CSPSecureScoreDataUpload {
 
     #region Storage account process selection
     $StorageAccountFlowMenu = @"
-`nPlease choose one of the options for uploading data to an Azure storage account. For help and more detailed info during the process refer to the documentation at [https://github.com/dexmach/azure-csp-securescore].
+`nPlease choose one of the options for uploading data to an Azure storage account. For help and more detailed info during the process refer to the documentation at [https://github.com/jcblmao/azure-csp-securescore].
 After process execution, reinitiate the script if you want to execute other processes.
 
 1 - Upload to an existing storage account.
@@ -693,13 +693,14 @@ q - Quit the process
 
 #region Menu functionality and execution
 $Banner = @"
- ____            __  __            _
-|  _ \  _____  _|  \/  | __ _  ___| |__
-| | | |/ _ \ \/ / |\/| |/ _`` |/ __| '_ \
-| |_| |  __/>  <| |  | | (_| | (__| | | |
-|____/ \___/_/\_\_|  |_|\__,_|\___|_| |_|
+    _    _       _             ____                  
+   / \  | |_ __ | |__   __ _  / ___|  ___ __ _ _ __  
+  / _ \ | | '_ \| '_ \ / _' | \___ \ / __/ _' | '_ \ 
+ / ___ \| | |_) | | | | (_| |  ___) | (_| (_| | | | |
+/_/   \_\_| .__/|_| |_|\__,_| |____/ \___\__,_|_| |_|
+          |_|                                        
 
-Welcome to the DexMach CSP secure score data retrieval project!
+Welcome to the CSP secure score data retrieval project!
 "@
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {
@@ -712,15 +713,15 @@ if ((Get-ExecutionPolicy) -ne 'Unrestricted') {
 Write-Host $Banner -ForegroundColor Green
 
 $Menu = @"
-`nPlease choose the process that you want to initiate. For help and more detailed info during the process refer to the documentation at [https://github.com/dexmach-csp/azure-csp-securescore].
+`nPlease choose the process that you want to initiate. For help and more detailed info during the process refer to the documentation at [https://github.com/jcblmao/azure-csp-securescore].
 After process execution, reinitiate the script if you want to execute again.
 
-1 - Start prerequisites flow.
-        An Azure AD multi-tenant application will be created in your authenticated tenant. This application can be used in the data retrieval process.
-2 - Start data retrieval flow.
-        Provide credentials for a multi-tenant app and log in with a CSP portal administrator. The process will do the rest and provide you with data files to link to our Power BI insights.
-3 - Upload local data for visualization
-        Send your local files to an Azure storage account from where your files can be used by the PowerBI dashboard.
+1 - Start prerequisites flow. - [An Azure AD multi-tenant application will be created in your authenticated tenant. This application can be used in the data retrieval process.]
+
+2 - Start data retrieval flow. - [Provide credentials for a multi-tenant app and log in with a CSP portal administrator. The process will do the rest and provide you with data files to link to our Power BI insights.]
+
+3 - Upload local data for visualization. - [Send your local files to an Azure storage account from where your files can be used by the PowerBI dashboard.]
+
 q - Quit the process
 `n
 "@
